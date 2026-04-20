@@ -1,184 +1,125 @@
+﻿using UnityEngine;
 using System.Collections;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-
-public class GameManager : MonoBehaviour,ISaveable
+using System.Collections.Generic;
+using TMPro; // 如果你用 TextMeshPro 做 UI
+using DG.Tweening;
+public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
-    private Vector3 lastPlayerPosition;
+    public static GameManager Instance;
 
-    private string lastScenePlayed;
-    private bool dataLoaded;
+    [Header("Game Settings")]
+    public int maxStocks = 3;
+    public float respawnDelay = 2.0f;
+
+    [Header("Player Data")]
+    public int p1Stocks;
+    public int p2Stocks;
+
+    [Header("UI Reference")]
+    public TextMeshProUGUI countdownText; // 拖入显示倒计时的文字
+    public GameObject gameOverPanel;     // 游戏结束的面板
+
+    private bool isGameActive = false;
+
     private void Awake()
     {
-        if (instance != null && instance != this)
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        StartCoroutine(GameSetupRoutine());
+    }
+
+    //  1. 开场逻辑
+
+    IEnumerator GameSetupRoutine()
+    {
+        p1Stocks = maxStocks;
+        p2Stocks = maxStocks;
+        isGameActive = false; 
+
+        UpdateStockUI();
+
+        countdownText.gameObject.SetActive(true);
+
+        // --- 第 1 秒：Get Ready 缓动放大 ---
+        countdownText.text = "Get Ready?";
+        countdownText.color = Color.yellow;
+        // 先把字变小，然后用 1 秒时间平滑放大，营造蓄力感
+        countdownText.transform.localScale = Vector3.one * 0.5f;
+        countdownText.transform.DOScale(1.2f, 1f).SetEase(Ease.OutQuad);
+
+        yield return new WaitForSecondsRealtime(1f);
+
+        // --- 第 2 秒：Fight 爆裂弹射 ---
+        // 杀气腾腾的红色
+        countdownText.color = Color.red;
+        countdownText.text = "Fight!";
+        isGameActive = true; // 🔓 闸门开！玩家可以动了！
+
+        // 杀手锏：DOPunchScale (拳击缩放)。瞬间撑大并带回弹余震，打击感拉满！
+        countdownText.transform.localScale = Vector3.one * 1.5f;
+        countdownText.transform.DOPunchScale(new Vector3(0.5f, 0.5f, 0), 0.5f, 10, 1f);
+
+        yield return new WaitForSecondsRealtime(1f);
+
+        // --- 收尾：优雅淡出 ---
+        countdownText.DOFade(0f, 0.3f).OnComplete(() =>
         {
-            Destroy(gameObject);
-            return;
+            countdownText.gameObject.SetActive(false);
+            // 记得把透明度恢复，不然下局开局字就看不见了
+            countdownText.DOFade(1f, 0f);
+        });
+    }
+
+    //  2. 玩家死亡回调 (由 Entity_Health 调用)
+    public void OnPlayerDeath(string playerTag)
+    {
+        if (!isGameActive) return;
+
+        if (playerTag == "Player1")
+        {
+            p1Stocks--;
+            Debug.Log($"P1 丢了一命！剩余: {p1Stocks}");
+        }
+        else if (playerTag == "Player2")
+        {
+            p2Stocks--;
+            Debug.Log($"P2 丢了一命！剩余: {p2Stocks}");
         }
 
-        instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-    public void ContinuePlay()
-    {
-        ChangeScene(lastScenePlayed, RespawnType.NonSpecific);
-    }
+        UpdateStockUI();
 
-    public void RestartScene()
-    {
-        string sceneName = SceneManager.GetActiveScene().name;
-        ChangeScene(sceneName, RespawnType.NonSpecific);
-    }
-
-
-    public void ChangeScene(string sceneName, RespawnType respwanType)
-    {
-        SaveManager.instance.SaveGame();
-
-        Time.timeScale = 1;
-        StartCoroutine(ChangeSceneCo(sceneName, respwanType));
-    }
-    private IEnumerator ChangeSceneCo(string sceneName, RespawnType respawnType)
-    {
-        // 1. ��ȡ��ǰ������ FadeScreen
-
-        if (UI_FadeScreen.instance != null)
-            yield return StartCoroutine(UI_FadeScreen.instance.FadeOutCoroutine());
-        else
+        // 检查胜负
+        if (p1Stocks <= 0 || p2Stocks <= 0)
         {
-            Debug.LogWarning("No UI_FadeScreen found before scene load!");
+            EndGame(p1Stocks <= 0 ? "Player 2" : "Player 1");
         }
-
-        // 2. �л�����
-        SceneManager.LoadScene(sceneName);
-
-        // 3. �������ݼ��ر�־
-        dataLoaded = false;
-        yield return null;
-        // 4. ���ش浵��������ڣ�
-
-        while (dataLoaded == false)
-        {
-            Debug.Log("data Loading");
-            yield return null;
-        }
-        // 5. ��������˵�������Ҫ���� Player
-        if (SceneManager.GetActiveScene().name == "MainMenu")
-            yield break;
-
-        // 6. ��ȡ Player ʵ��
-        Player player = Player.instance;
-        if (player == null)
-        {
-            Debug.LogWarning("Player instance not found after scene load!");
-            yield break;
-        }
-
-        // 7. ��ȡ����µ�λ��
-        Vector3 position = GetNewPlayerPosition(respawnType);
-        if (position != Vector3.zero)
-        {
-            Debug.Log("TP");
-            player.TeleportPlayer(position);
-        }
-        yield return null;
-        // 8. ��ȡ�³����� FadeScreen
-        // �ȴ�����
-        if (UI_FadeScreen.instance != null)
-            yield return StartCoroutine(UI_FadeScreen.instance.FadeInCoroutine());
-        else
-        {
-            Debug.LogWarning("No UI_FadeScreen found after scene load!");
-        }
-  
-    
-       
     }
 
-    private UI_FadeScreen FindFadeScreenUI()
+    private void UpdateStockUI()
     {
-        if (UI.instance != null)
-            return UI.instance.fadeScreenUI;
-        else
-            return FindFirstObjectByType<UI_FadeScreen>();
+        // 这里去调用你 UI 脚本里显示小头像或星星的方法
+        UIManager.Instance?.UpdateStocks(p1Stocks, p2Stocks);
     }
-    private Vector3 GetNewPlayerPosition(RespawnType type)
+
+    // 🌟 3. 游戏结束
+    void EndGame(string winnerName)
     {
-        if (type == RespawnType.Portal)
+        isGameActive = false;
+        Debug.Log("游戏结束！获胜者是: " + winnerName);
+
+        // 慢动作特写
+        Time.timeScale = 0.5f;
+
+        // 显示结束面板
+        if (gameOverPanel != null)
         {
-            Object_Portal portal = Object_Portal.instance;
-
-            Vector3 position = portal.GetPosition();
-
-            portal.SetTrigger(false);
-            portal.DisableIfNeeded();
-
-            return position;
+            gameOverPanel.SetActive(true);
+          
         }
-
-
-        if (type == RespawnType.NonSpecific)
-        {
-            var data = SaveManager.instance.GetGameData();
-            var checkpoints = FindObjectsByType<Object_Checkpoint>(FindObjectsSortMode.None);
-            var unlockedCheckpoints = checkpoints
-                .Where(cp => data.unlockedCheckpoints.TryGetValue(cp.GetCheckpointId(), out bool unlocked) && unlocked)
-                .Select(cp => cp.GetPosition())
-                .ToList();
-
-            var enterWaypoints = FindObjectsByType<Object_Waypoint>(FindObjectsSortMode.None)
-                .Where(wp => wp.GetWaypointType() == RespawnType.Enter)
-                .Select(wp => wp.GetPositionAndSetTriggerFalse())
-                .ToList();
-
-            var selectedPositions = unlockedCheckpoints.Concat(enterWaypoints).ToList(); // combine two lists into one
-
-            if (selectedPositions.Count == 0)
-                return Vector3.zero;
-
-            return selectedPositions.
-                OrderBy(position => Vector3.Distance(position, lastPlayerPosition)) // arrange form lowest to highest by comparing distance
-                .First();
-        }
-
-        return GetWaypointPosition(type);
-    }
-    private Vector3 GetWaypointPosition(RespawnType type)
-    {
-        var waypoints = FindObjectsByType<Object_Waypoint>(FindObjectsSortMode.None);
-
-        foreach (var point in waypoints)
-        {
-            if (point.GetWaypointType() == type)
-                return point.GetPositionAndSetTriggerFalse();
-        }
-
-        return Vector3.zero;
     }
 
-    public void LoadData(GameData data)
-    {
-
-        lastScenePlayed = data.lastScenePlayed;
-        lastPlayerPosition = data.lastPlayerPosition;
-
-        if (string.IsNullOrEmpty(lastScenePlayed))
-            lastScenePlayed = "Level_0";
-        Debug.Log("LoadData");
-        dataLoaded = true;
-    }
-
-    public void SaveData(ref GameData data)
-    {
-        string currentScene = SceneManager.GetActiveScene().name;
-
-        if (currentScene == "MainMenu")
-            return;
-
-        data.lastPlayerPosition = Player.instance.transform.position;
-        data.lastScenePlayed = currentScene;
-        dataLoaded = false;
-    }
+    public bool IsGameActive() => isGameActive;
 }

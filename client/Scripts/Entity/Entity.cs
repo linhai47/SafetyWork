@@ -40,6 +40,13 @@ public class Entity : MonoBehaviour
     public bool useTopAnimator = false;
 
     public Entity_Stats stats;
+
+    [Header("武器挂载")]
+    public Transform gunHoldPoint;
+    public WeaponDataSO currentWeaponData;
+    public Weapon currentWeaponInstance;
+    public Transform bladeHoldePoint;
+
     protected virtual void Start()
     {
         onEnemySpawnedStatic?.Invoke(this);
@@ -79,6 +86,12 @@ public class Entity : MonoBehaviour
     {
         if (!isLocalPlayer)
         {
+            return;
+        }
+         if (GameManager.Instance != null && !GameManager.Instance.IsGameActive())
+        {
+            // 如果你有刚体，强制让速度归零，防止带入之前的惯性
+            rb.linearVelocity= Vector2.zero;
             return;
         }
         HandleCollisionDetection();
@@ -203,5 +216,46 @@ public class Entity : MonoBehaviour
         if (secondaryWallCheck != null) Gizmos.DrawLine(secondaryWallCheck.position, secondaryWallCheck.position + new Vector3(wallCheckDistance * facingDir, 0));
 
 
+    }
+
+
+    public virtual void EntityRespawn()
+    {
+        // 1. 中止所有位移和物理协程，防止死前的击飞力带到下辈子
+        if (knockbackCo != null)
+        {
+            StopCoroutine(knockbackCo);
+            knockbackCo = null;
+        }
+        if (SpeedUpCo != null)
+        {
+            StopCoroutine(SpeedUpCo);
+            SpeedUpCo = null;
+        }
+        isKnocked = false;
+
+        // 2. 彻底清空物理速度
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+
+        // 3. 强制重置动画机 (非常关键！)
+        // Rebind() 会直接把 Animator 拔掉电源重启，强制回到你设置的 Default State（通常是 Idle）
+        if (anim != null)
+        {
+            anim.Rebind();
+            anim.Update(0f);
+        }
+
+        // 4. 确保碰撞体是开启的 (如果你在死亡时关掉了它的话)
+        Collider2D cd = GetComponent<Collider2D>();
+        if (cd != null)
+        {
+            cd.enabled = true;
+        }
+
+        // 5. 触发重生的事件 (可用于后续通知 UI 或特效)
+        // onEnemySpawnedStatic?.Invoke(this); // 如果你需要复活时也触发生成特效，可以解开这句
+
+        Debug.Log($"【系统】{gameObject.name} 基础物理与动画已重置，完成复活！");
     }
 }

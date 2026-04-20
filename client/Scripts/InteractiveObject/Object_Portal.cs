@@ -46,7 +46,7 @@ public class Object_Portal : MonoBehaviour, ISaveable
     private void UseTeleport()
     {
         string destinationScene = InTown() ? returnSceneName : townSceneName;
-        GameManager.instance.ChangeScene(destinationScene, RespawnType.Portal);
+        //GameManager.instance.ChangeScene(destinationScene, RespawnType.Portal);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

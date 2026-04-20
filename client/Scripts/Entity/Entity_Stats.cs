@@ -35,6 +35,53 @@ public class Entity_Stats : MonoBehaviour
 
     }
 
+    // =====================================
+    // ?? 装备系统：附加武器属性
+    // =====================================
+    public void ApplyWeaponModifiers(WeaponDataSO weaponData)
+    {
+        if (weaponData == null) return;
+
+        // 1. 改变当前角色的攻击元素类型
+        nowElement = weaponData.weaponElement;
+
+        // 2. 遍历武器所有的属性加成，加到对应的 Stat 上
+        if (weaponData.statModifiers != null)
+        {
+            foreach (var mod in weaponData.statModifiers)
+            {
+                Stat targetStat = GetStatByType(mod.statType);
+                if (targetStat != null)
+                {
+                    // ?? 修复：传入数值，并将武器的名字（name）作为修饰来源传进去
+                    targetStat.AddModifier(mod.value, weaponData.name);
+                }
+            }
+        }
+    }
+
+    public void RemoveWeaponModifiers(WeaponDataSO weaponData)
+    {
+        if (weaponData == null) return;
+
+        // 1. 恢复为无属性攻击
+        nowElement = ElementType.None;
+
+        // 2. 将之前加上的属性扣除掉
+        if (weaponData.statModifiers != null)
+        {
+            foreach (var mod in weaponData.statModifiers)
+            {
+                Stat targetStat = GetStatByType(mod.statType);
+                if (targetStat != null)
+                {
+                    // ?? 完美契合你的源码：只传武器名字进去，把这把武器加的属性全清掉
+                    targetStat.RemoveModifier(weaponData.name);
+                }
+            }
+        }
+    }
+
 
     public float GetElementalDamage(ElementType element, float scaleFactor = 1)
     {

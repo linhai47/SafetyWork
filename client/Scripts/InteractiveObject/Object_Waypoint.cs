@@ -35,7 +35,7 @@ public class Object_Waypoint : MonoBehaviour
         if (canBeTriggered == false)
             return;
 
-        GameManager.instance.ChangeScene(transferToScene, conntedWaypoint);
+        //GameManager.instance.ChangeScene(transferToScene, conntedWaypoint);
     }
 
     private void OnTriggerExit2D(Collider2D collision)

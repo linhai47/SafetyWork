@@ -1,0 +1,59 @@
+﻿using UnityEngine;
+using DG.Tweening;
+using UnityEngine.Rendering;
+
+public class TerrariaStyleWeapon : MeleeWeapon
+{
+    [Header("挥砍设置")]
+    public float startAngle = 120f;   // 起始角度（脑后）
+    public float swingAngle = 150f;   // 挥砍的弧度大小
+    public float swingDuration = 0.25f; // 挥砍耗时
+    public float bigScale = 2f;
+    // 🌟 换成专门掌管渲染的组件
+    private SpriteRenderer weaponRenderer;
+
+    private void Start()
+    {
+        // 自动去自己身上（或者子物体上）找 SpriteRenderer
+        weaponRenderer = GetComponentInChildren<SpriteRenderer>();
+
+        // 开局先隐身，等按攻击键再出来
+        if (weaponRenderer != null)
+        {
+            weaponRenderer.enabled = false;
+        }
+    }
+
+    public override void ExecuteAttack()
+    {
+        if (Time.time < lastAttackTime + data.baseAttackCooldown) return;
+        base.ExecuteAttack();
+
+        Debug.Log("Melee attack");
+
+        // 1. 归位到起手角度
+        transform.localRotation = Quaternion.Euler(0, 0, startAngle);
+
+        // 🌟 核心新增 1：在拔刀的瞬间，把剑缩小回正常尺寸（甚至更小，比如 0.5 倍），为后续的“爆发变大”蓄力
+        transform.localScale = Vector3.one;
+
+        // 2. 拔刀！(显示图片)
+        if (weaponRenderer != null) weaponRenderer.enabled = true;
+
+        // 3. 计算挥砍落点
+        float endAngle = startAngle - swingAngle;
+
+       
+        transform.DOLocalRotate(new Vector3(0, 0, endAngle), swingDuration, RotateMode.Fast)
+            .SetEase(Ease.OutCubic)
+            .OnComplete(() =>
+            {
+                // 5. 砍完收刀！(隐藏图片)
+                if (weaponRenderer != null) weaponRenderer.enabled = false;
+            });
+
+   
+        transform.DOScale(new Vector3(bigScale, bigScale, 1f), swingDuration)
+            .SetEase(Ease.OutBack);
+    }
+}

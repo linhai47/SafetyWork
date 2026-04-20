@@ -27,13 +27,13 @@ public class DungeonManager : MonoBehaviour
         Debug.Log($"进入副本: {dungeon.dungeonName}，场景: {dungeon.sceneName}");
 
        
-        GameManager.instance.ChangeScene(currentDungeon.dungeonName, RespawnType.NonSpecific);
+        //GameManager.instance.ChangeScene(currentDungeon.dungeonName, RespawnType.NonSpecific);
     }
 
     public void ExitDungeon(string mainSceneName)
     {
         currentDungeon = null;
-        GameManager.instance.ChangeScene("平原" , RespawnType.Exit);
+        //GameManager.instance.ChangeScene("平原" , RespawnType.Exit);
     }
 
     /// <summary>
