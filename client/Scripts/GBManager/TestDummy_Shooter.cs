@@ -71,7 +71,7 @@ public class TestDummy_Shooter : MonoBehaviour
             if (weapon != null)
             {
                 // 情况 A：木桩身上挂了真实的 Weapon 脚本，拿大写的 RuntimeEffects！
-                effectsToPass = weapon.runtimeEffects;
+                effectsToPass = weapon.RuntimeEffects;
             }
             else if (weaponData != null && weaponData.weaponEffects != null)
             {

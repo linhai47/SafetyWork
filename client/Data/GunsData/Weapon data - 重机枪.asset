@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abd27542cc8283a40aacaecd02bb6f2e, type: 3}
+  m_Name: "Weapon data - \u91CD\u673A\u67AA"
+  m_EditorClassIdentifier: 
+  saveId: 39397a5f41b8b3f48ab09097943853fa
+  itemPrice: 100
+  minStackSizeAtShop: 1
+  maxStackSizeAtShop: 1
+  itemRarity: 100
+  dropChance: 65
+  maxDropChance: 65
+  craftRecipe: []
+  itemName: "\u91CD\u673A\u67AA"
+  itemIcon: {fileID: 4409385771726587652, guid: 36c226879f57f7443ab820f364223df6, type: 3}
+  itemType: 1
+  maxStackSize: 1
+  itemEffect: {fileID: 0}
+  modifiers: []
+  category: 2
+  isRanged: 1
+  weaponPrefab: {fileID: 6365546871711060537, guid: 9dd9670700477ff4daa8caacfb5aabd7, type: 3}
+  baseAttackCooldown: 0.1
+  weaponElement: 0
+  statModifiers:
+  - statType: 7
+    value: 3
+  weaponEffects: []
+  bulletSpeed: 20
+  damageScaleData:
+    physical: 1
+    elemental: 1
+    accDuration: 5
+    accMultiplier: 1
+    burnDuration: 3
+    burnDamageScale: 1
+    shockDuration: 3
+    shockDamageScale: 1
+    shockCharge: 0.4
+  bulletPrefab: {fileID: 1050500761751226608, guid: 3ed0154247b1b84459c3a6e1ebcf9775, type: 3}
+  hitboxRadius: 0
+  isAutomatic: 1
+  bulletsPerShot: 1
+  spreadAngle: 1
+  bulletLifeTime: 2

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1cf76c6235d9824bb5317e8b0d8ffa4, type: 3}
+  m_Name: Effect_Parry
+  m_EditorClassIdentifier: 
+  allowedWeaponTypes: 1
+  buffIcon: {fileID: 6684543567387057367, guid: c565e6b4645da814a8250482e9225e88, type: 3}
+  showInUI: 1
+  duration: 10
+  cooldown: 3
+  parryWindowFrames: 1
+  deflectSpeedMultiplier: 1.5
+  hitStopDuration: 0
+  parrySuccessVFX: {fileID: 1484793296606383187, guid: e5772480c5744e048921540e36fc9242, type: 3}
